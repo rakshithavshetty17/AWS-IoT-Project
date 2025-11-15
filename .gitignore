@@ -1,55 +1,103 @@
-# Prerequisites
-*.d
+#include <WiFi.h>
+#include <PubSubClient.h>
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+// -------- WiFi Credentials --------
+const char* ssid = "root";
+const char* password = "admin";
 
-# Linker output
-*.ilk
-*.map
-*.exp
+// -------- MQTT Broker (Default demo broker) --------
+const char* mqtt_server = "test.mosquitto.org";   // public MQTT broker
+const int mqtt_port = 1883;
+const char* mqtt_user = "root";
+const char* mqtt_pass = "admin";
 
-# Precompiled Headers
-*.gch
-*.pch
+// -------- Sensor Pins --------
+#define TEMP_SENSOR_PIN 34        // LM35 or analog temp sensor
+#define VIB_SENSOR_PIN  27        // Digital vibration sensor (SW-420 etc.)
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+// -------- Connect to WiFi --------
+void setup_wifi() {
+  delay(10);
+  Serial.println();
+  Serial.print("Connecting to WiFi: ");
+  Serial.println(ssid);
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+  WiFi.begin(ssid, password);
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+  Serial.println("");
+  Serial.println("WiFi Connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+}
 
-# debug information files
-*.dwo
+// -------- MQTT Reconnect Logic --------
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Connecting to MQTT... ");
+    
+    if (client.connect("ESP32_Device_01", mqtt_user, mqtt_pass)) {
+      Serial.println("Connected!");
+      client.subscribe("iot/device/commands");
+    } else {
+      Serial.print("Failed. State: ");
+      Serial.println(client.state());
+      delay(2000);
+    }
+  }
+}
+
+// -------- Setup --------
+void setup() {
+  Serial.begin(115200);
+  pinMode(VIB_SENSOR_PIN, INPUT);
+
+  setup_wifi();
+  client.setServer(mqtt_server, mqtt_port);
+}
+
+// -------- Read Temperature (LM35 Example) --------
+// LM35 gives 10mV/°C → ADC formula
+float readTemperature() {
+  int adcValue = analogRead(TEMP_SENSOR_PIN);
+  float millivolts = (adcValue / 4095.0) * 3300;   // ESP32 ADC
+  float tempC = millivolts / 10.0;                 // LM35
+  return tempC;
+}
+
+// -------- Loop --------
+void loop() {
+
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+
+  float temperature = readTemperature();
+  int vibration = digitalRead(VIB_SENSOR_PIN);
+
+  // Convert 1/0 to readable string
+  const char* vibration_status = vibration == HIGH ? "DETECTED" : "NORMAL";
+
+  // Create JSON payload
+  char payload[200];
+  snprintf(payload, sizeof(payload),
+           "{\"temperature\": %.2f, \"vibration\": \"%s\"}", 
+           temperature, vibration_status);
+
+  // Publish
+  client.publish("iot/device/sensorData", payload);
+
+  Serial.print("Published: ");
+  Serial.println(payload);
+
+  delay(2000);  // send every 2 seconds
+}
+
