@@ -1,4 +1,4 @@
-# AWS-IoT-Project
+# Industrial Equipment Fault Prediction (AWS-IoT-Project)
 An IoT-driven predictive maintenance project using ESP32 and AWS services. The system streams real-time sensor data to AWS IoT Core, stores it in Timestream, detects anomalies, and triggers SNS alerts for equipment fault prevention.
 Project Overview
 
@@ -6,93 +6,95 @@ The ESP32 continuously reads temperature and vibration values from connected sen
 Using an IoT Rule, the data is pushed into Amazon Timestream for time-series storage.
 If temperature or vibration crosses a predefined threshold, SNS automatically sends an alert to the user, enabling proactive maintenance.
 
-Tech Stack
-Hardware
+🛠️**Tech Stack**
 
-ESP32 Development Board
+**Hardware**
 
-Temperature Sensor (e.g., DHT22/DS18B20)
+  - ESP32 Development Board
 
-Vibration Sensor (e.g., SW-420 or accelerometer)
+  - Temperature Sensor (e.g., DHT22/DS18B20)
 
-AWS Services
+  - Vibration Sensor (e.g., SW-420 or accelerometer)
 
-AWS IoT Core – Secure MQTT communication
+**AWS Services**
 
-IoT Rules Engine – Route data to Timestream & SNS
+  - AWS IoT Core – Secure MQTT communication
 
-Amazon Timestream – Time-series database for sensor logs
+  - IoT Rules Engine – Route data to Timestream & SNS
 
-Amazon SNS – SMS/Email alerts
+  - Amazon Timestream – Time-series database for sensor logs
 
-ESP32 Setup
+  - Amazon SNS – SMS/Email alerts
 
-Install Arduino IDE or PlatformIO
+🔧**ESP32 Setup**
 
-Add ESP32 board support
+ 1.Install Arduino IDE or PlatformIO
 
-Install required libraries:
+ 2.Add ESP32 board support
 
-WiFiClientSecure
+ 3.Install required libraries:
 
-PubSubClient
+  - WiFiClientSecure
 
-Sensor libraries (e.g., DHT, etc.)
+  - PubSubClient
 
-Configure:
+  - Sensor libraries (e.g., DHT, etc.)
 
-WiFi credentials
+ 4.Configure:
 
-AWS IoT Core endpoint
+  - WiFi credentials
 
-Certificate paths
+  - AWS IoT Core endpoint
 
-Flash the firmware to ESP32
+  - Certificate paths
 
-AWS Setup Summary
-1. AWS IoT Core
+ 5.Flash the firmware to ESP32
 
-Create IoT Thing
+☁️**AWS Setup Summary**
 
-Generate & attach certificate
+**1. AWS IoT Core**
 
-Attach IoT policy
+  - Create IoT Thing
 
-Configure MQTT topics
+  - Generate & attach certificate
 
-2. IoT Rule
+  - Attach IoT policy
+
+  - Configure MQTT topics
+
+**2. IoT Rule**
 
 Example rule to send data to Timestream and SNS:
 
 SELECT temperature, vibration FROM 'equipment/sensors'
 
-3. Timestream
+**3. Timestream**
 
-Create Database
+  - Create Database
 
-Create Table
+  - Create Table
 
-Store incoming sensor values with timestamps
+  - Store incoming sensor values with timestamps
 
-4. SNS
+**4. SNS**
 
-Create SNS Topic
+  - Create SNS Topic
 
-Subscribe with email or SMS
+  - Subscribe with email or SMS
 
-Trigger SNS when:
+  - Trigger SNS when:
 
-temperature > threshold
+      * temperature > threshold
 
-vibration > threshold
+      * vibration > threshold
 
-🔍 Anomaly Detection Logic
+🔍 **Anomaly Detection Logic**
 
-Threshold-based detection:
+  Threshold-based detection:
 
-Temperature > 60°C → Alert
+  - Temperature > 60°C → Alert
 
-Vibration above safe level (value based on sensor output) → Alert
+  - Vibration above safe level (value based on sensor output) → Alert
 
-All alerts are routed via SNS.
+  All alerts are routed via SNS.
 
